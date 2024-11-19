@@ -15,13 +15,14 @@ def list_qr_codes(directory_path: Path) -> List[str]:
     - A list of filenames (str) for QR codes found in the directory.
     """
     try:
-        # List all files ending with '.png' in the specified directory.
+        if not directory_path.exists():
+            raise FileNotFoundError(f"Directory not found: {directory_path}")
         return [f for f in os.listdir(directory_path) if f.endswith('.png')]
-    except FileNotFoundError:
-        logging.error(f"Directory not found: {directory_path}")
+    except FileNotFoundError as e:
+        logging.error(str(e))
         raise
-    except OSError as e:
-        logging.error(f"An OS error occurred while listing QR codes: {e}")
+    except Exception as e:
+        logging.error(f"An error occurred while listing QR codes: {e}")
         raise
 
 def generate_qr_code(data: str, path: Path, fill_color: str = 'red', back_color: str = 'white', size: int = 10):
@@ -52,24 +53,31 @@ def delete_qr_code(file_path: Path):
     Parameters:
     - file_path (Path): The filesystem path of the QR code image to delete.
     """
-    if file_path.is_file():
-        file_path.unlink()  # Delete the file
-        logging.info(f"QR code {file_path.name} deleted successfully")
-    else:
-        logging.error(f"QR code {file_path.name} not found for deletion")
-        raise FileNotFoundError(f"QR code {file_path.name} not found")
+    try:
+        if file_path.is_file():
+            file_path.unlink()  # Delete the file
+            logging.info(f"QR code {file_path.name} deleted successfully")
+        else:
+            logging.error(f"QR code {file_path.name} not found for deletion")
+            raise FileNotFoundError(f"QR code {file_path.name} not found")
+    except Exception as e:
+        logging.error(f"Error occurred while deleting {file_path.name}: {e}")
+        raise
 
 def create_directory(directory_path: Path):
     """
-    Creates a directory at the specified path if it doesn't already exist.
+    Ensures the existence of a directory at the specified path.
+    If the directory already exists, no changes are made.
     Parameters:
     - directory_path (Path): The filesystem path of the directory to create.
+    Raises:
+    - PermissionError: If the process lacks the necessary permissions.
+    - Exception: For other unexpected errors.
     """
     logging.debug('Attempting to create directory')
     try:
-        directory_path.mkdir(parents=True, exist_ok=True)  # Create the directory and any parent directories
-    except FileExistsError:
-        logging.info(f"Directory already exists: {directory_path}")
+        directory_path.mkdir(parents=True, exist_ok=True)
+        logging.info(f"Directory ensured: {directory_path}")
     except PermissionError as e:
         logging.error(f"Permission denied when trying to create directory {directory_path}: {e}")
         raise

@@ -1,11 +1,18 @@
 from pydantic import BaseModel, HttpUrl, Field, conint
 from typing import List, Optional
+from enum import Enum
+
+class Color(str, Enum):
+    black = "black"
+    white = "white"
+    red = "red"
+    yellow = "yellow"
 
 class QRCodeRequest(BaseModel):
     url: HttpUrl = Field(..., description="The URL to encode into the QR code.")
-    fill_color: str = Field(default="red", description="Color of the QR code.", example="black")
-    back_color: str = Field(default="white", description="Background color of the QR code.", example="yellow")
-    size: conint(ge=1, le=40) = Field(default=10, description="Size of the QR code from 1 to 40.", example=20) # type: ignore
+    fill_color: Color = Field(default=Color.red, description="Color of the QR code.", example="black")
+    back_color: Color = Field(default=Color.white, description="Background color of the QR code.", example="yellow")
+    size: conint(ge=1, le=40) = Field(default=10, description="Size of the QR code from 1 to 40.", example=20)
 
     class Config:
         json_schema_extra = {
@@ -54,9 +61,12 @@ class QRCodeResponse(BaseModel):
             }
         }
 
+class TokenType(str, Enum):
+    bearer = "bearer"
+
 class Token(BaseModel):
     access_token: str = Field(..., description="The access token for authentication.")
-    token_type: str = Field(default="bearer", description="The type of the token.")
+    token_type: TokenType = Field(default=TokenType.bearer, description="The type of the token.")
 
     class Config:
         json_schema_extra = {
